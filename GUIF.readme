@@ -1,0 +1,15 @@
+SHORT: GUIF v1.3 is a graphical front end to AmiTCP's finger command.
+
+It needs AmiTCP to be installed, and the finger command to be in the
+Amitcp:bin directory, it also requires AskEnv, and RexxReqTools both of which
+are available on Aminet, full details on installation and usage can be found
+in the included GUIF.guide.
+
+This is my first release and as such I know it's not perfect so if any Arexx
+gurus out there care to give an opinion I'd be very happy to hear from you.
+
+Andy
+April 1995
+
+
+

@@ -1,0 +1,127 @@
+/*********************************************/
+/* Andy's third GUI Finger, this time using  */
+/* a snazzy little GUI tool called 'AskEnv'  */
+/*          written by Bengt Giger.          */
+/* ©1995 Andy Aldridge, if you can improve   */
+/* on this script please feel free but please*/
+/*  send me a copy of the improved script.   */
+/*          andy@aald.demon.co.uk            */
+/*********************************************/
+
+
+/*$VER: GUIF v1.3 (17/04/95)
+*/
+address command
+
+/* you may change these if you wish           */
+
+configfile = 'Amitcp:db/Guif.config'          /* this is the location of the config file */
+reqfile    = 't:finger.req'                   /* this is the temporary file for AskEnv   */
+ViewCmd    = 'Sys:Utilities/Multiview'        /* this is used to view the finger output  */
+
+/* parse-ing the argument CONFIG which        */
+/* will allow you to create a new GUIF.config */
+
+parse arg argument
+
+/* sort out RexxReqTools and RexxArpLib       */
+
+if upper(argument) = 'CONFIG' then
+    call fingerconfig
+
+call addlib('rexxarplib.library',0,-30)
+if exists("libs:rexxreqtools.library")>0 then do
+   call addlib('rexxreqtools.library',0,-30)
+end
+if (exists("libs:rexxreqtools.library")=0) then do
+   say 'rexxreqtools is not installed! Install it and try again.'
+   exit
+end
+
+/* check the existance of the GUIF.config file */
+/* and create one if it can't be found.        */
+
+if ~exists(configfile) then
+    do
+        call rtezrequest('you have no config file, would you like to make one?','_Yes |_No','GUIF v1.3','rt_reqpos = reqpos_centerscr')
+        frt = rtresult
+        if frt = 0 then exit
+        call Fingerconfig
+    end
+
+/* create an 'AskEnv' .req file to be called.  */
+
+call open(InpFile,configfile,R)
+call open(OutFile,reqfile,W)
+
+call writeln(outfile,'WINDOW CENTER 280 190 NAME "GUIF v1.3 "')
+call writeln(outfile,'BUTTON POSITION 120 162 40 20 LABEL "Quit" #')
+
+COUNT = 20
+EnvCnt = 2
+
+do forever
+    line = readln(InpFile)
+    if EOF(InpFile) then break
+    if EnvCnt = 10 then break
+    if left(line,1) ~= "#" then do
+        if compress(line) ~= "" then do
+            Call WriteLn(Outfile, 'BUTTON POSITION 30 'Count' 225 15 END LABEL "'line'" #')
+            'setenv GUIF_'EnvCnt line
+            COUNT = COUNT + 17
+
+            EnvCnt = EnvCnt + 1
+        end
+    end
+end
+call close(InpFile)
+call close(OutFile)
+
+/* AskEnv now does it's business...            */
+
+do forever
+    'AskEnv GADFILE t:finger.req'
+    fnum = GetEnv(AskEnv_Button)
+    if fnum = 1 then break
+    host = GetEnv('GUIF_'fnum)
+    call fingerr
+end
+
+/* Game Over man, delete all the temp files    */
+
+'delete >NIL: t:finger.req'
+'delete >NIL: env:GUIF#?'
+'delete >NIL: t:finger.temp'
+exit
+
+
+/* routine that calls AmiTCP's Finger command  */
+/* and writes it to a temporary file, and then */
+/* views this file using the chosen text viewer*/
+
+fingerr:
+'Amitcp:bin/Finger >t:Finger.temp 'Host
+'Echo >>t:Finger.temp ""'
+ViewCmd 't:finger.temp'
+return
+
+exit
+
+/* routine that creates a GUIF.config file     */
+
+fingerconfig:
+call open(FinConf,'Amitcp:db/Guif.config',W)
+call writeln(FinConf,'# File created by GUIF containing popular finger locations')
+count = 0
+do forever
+    line = rtgetstring(,'Enter finger location','GUIF v1.3',,'rt_reqpos = reqpos_centerscr')
+    frt = rtresult
+    if frt = 0 then break
+    if compress(line) = "" then break
+    call writeln(FinConf,line)
+    count = count + 1
+    if count = 8 then break
+end
+call close(FinConf)
+return
+
